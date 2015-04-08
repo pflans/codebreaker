@@ -1,9 +1,9 @@
 
-.board, .shield {
+#board, #shield {
 	margin: 0 auto;
 }
 
-.shield ul.pegrow{
+#shield ul.pegrow{
 	display: block;
 	margin: 0 auto;
 	padding: 0;
@@ -18,8 +18,8 @@ ul.pegrow{
 ul.pegrow li.peg{
 	display: inline-block;
 	margin: 10px 5px;
-	width: 50px;
-	height: 50px;
+	width: 200px;
+	height: 200px;
 	background-color: #ccc;
 }
 
@@ -44,7 +44,7 @@ ul.keyrow li.key{
 	background-color: #ccc;
 }
 
-.shield{
+#shield{
 	background-color: #525252;
 }
 
