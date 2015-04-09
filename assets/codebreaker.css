@@ -20,13 +20,20 @@ ul.pegrow li.peg{
 	margin: 10px 5px;
 	width: 200px;
 	height: 200px;
-	background-color: #ccc;
 }
 
 ul.pegrow li.peg a {
 	display: block;
 	width: 100%;
 	height: 100%;
+}
+
+ul.pegrow li.button{
+	display: inline-block;
+	margin: 10px 5px;
+	width: 100px;
+	height: 100px;
+	background-color: #ccc;
 }
 
 ul.keyrow {
@@ -46,6 +53,12 @@ ul.keyrow li.key{
 
 #shield{
 	background-color: #525252;
+}
+
+/* Colors */
+
+.peg.color0, .peg {
+	background-color: #808080;
 }
 
 

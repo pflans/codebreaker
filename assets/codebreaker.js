@@ -4,27 +4,49 @@
 
 	CODEBREAKER.debugMode = true; // Member CODEBREAKER
 
-
 	// 0: Grey 
 	// 1: Blue
 	// 2: Green
 	// 3: Yellow
-	// 4: Pink
+	// 4: Neon Green
 	// 5: Purple
 	// 6: Red
 	var pegIds = [0,1,2,3,4,5,6]; 
-	var pegColors = {
-		0: '#808080',
-		1: '#0066FF',
-		2: '#009933',
-		3: '#FFFF00',
-		4: '#FF33CC',
-		5: '#FF00FF',
-		6: '#FF0000',
-	};
+
+	CODEBREAKER.pegColors = {
+		colors: {
+			0: '#808080',
+			1: '#0066FF',
+			2: '#009933',
+			3: '#FFFF99',
+			4: '#99FF00',
+			5: '#FF00FF',
+			6: '#FF0000',
+		},
+
+		playableColors: function (){
+			var _ = this;
+			var playableColors = _.colors;
+			delete playableColors[0];
+			return playableColors;
+		}
+	}
+
+
 	var gameRows = 2; // 1 indexed
 
 	var canvas; // Global element
+
+	CODEBREAKER.pegs = {};
+
+	CODEBREAKER.addPeg = function(peg) {
+
+		if (CODEBREAKER.pegs[peg.pegrow]) {
+	    	CODEBREAKER.pegs[peg.pegrow].push(peg);
+	    } else {
+	    	CODEBREAKER.pegs[peg.pegrow] = [peg];
+	    }
+	};
 
 	function Peg (color, pegrow, pos) {
 
@@ -42,7 +64,7 @@
 		setPos = function(pos){
 			this.pos = pos;
 		};
-	}
+	};
 
 	CODEBREAKER.init = function (){
 		var _ = this;
@@ -66,22 +88,28 @@
 		// TODO: This sometimes outputs out of order of data-cbrow
 		for (i = 1; i < gameRows+1; i++){ // 1 indexed due to shield being row 0. Probably a bad idea?
 			var newRow = boardRow.clone();
-
+/*
 			newRow.children('ul.pegrow').data('cbrow', i); // might be unneed to add data to parent
-
+			
 			newRow.find('li.peg').each(function(index, value){
-				$(this).data('cbpeg', index).data('cbrow', i);
+				$(this).data('cbpos', index).data('cbrow', i);
 			});
+*/
 			board.append(newRow);
+
 		}
 
 		var newShield = shield.clone();
 
-		newShield.children('ul.pegrow').data('cbrow', i); // might be unneed to add data to parent
-				
+		//newShield.children('ul.pegrow').data('cbrow', i); // might be unneed to add data to parent
+		
+		/*		
 		newShield.find('li.peg').each(function(index, value){
-			$(this).data('cbpeg', index).data('cbrow', 0);
+			var peg = new Peg(1,0,index);
+			CODEBREAKER.addPeg(peg);
+			$(this).data('cbpos', peg.pos).data('cbrow', peg.pegrow);
 		});
+*/
 
 		shield.append(newShield);
 
@@ -89,14 +117,31 @@
 		boardRow.remove();
 		
 
+
 	};
 
 	CODEBREAKER.eventListeners = function (){
-		var c = 0;
+		var counter = 1;
 		$('.peg').on('click', function() {
-			CODEBREAKER.pickPeg($(this), c);
-			c++;
+			var _ = $(this);
+			var color;
+			var colors = CODEBREAKER.pegColors.playableColors();
+
+			if (!_.attr('data-cbcolor')){
+				color = 1;
+			} else {
+				var prevColor = parseInt(_.attr('data-cbcolor'), 10);
+				if (prevColor == Object.keys(colors).length){
+					color = 1;
+				} else {
+					color = prevColor + 1;
+				}
+			}
+			_.attr('data-cbcolor', color);
+			_.css('background-color', colors[color]);
+
 		});
+
 	};
 
 	/* 
@@ -108,10 +153,9 @@
 
 	*/
 
-	CODEBREAKER.pickPeg = function pickPeg(that, i){
-		CODEBREAKER.Utils.debugFunction($(this));
-		console.log(that.data());
-		that.css('background-color',CODEBREAKER.Utils.getColorFromID(i));
+	CODEBREAKER.refreshBoard = function (){
+
+
 	};
 
 
@@ -130,5 +174,6 @@
 	CODEBREAKER.Utils.getColorFromID = function(id){
 		return pegColors[id];
 	};
+
 
 //});

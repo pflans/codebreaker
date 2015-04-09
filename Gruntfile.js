@@ -30,7 +30,7 @@ module.exports = function (grunt) {
 
         watch: {
             jshint: {
-                files: 'asset/codebreaker.js',
+                files: 'assets/codebreaker.js',
                 tasks: 'jshint'
             }
         }
