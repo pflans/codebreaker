@@ -3,23 +3,25 @@
 	margin: 0 auto;
 }
 
-#shield ul.pegrow{
-	display: block;
-	margin: 0 auto;
-	padding: 0;
+.row {
+	padding: 10px;
+	margin: 30px;
 }
 
 ul.pegrow{
 	list-style: none;
-	text-align: center;
 	display: inline-block;
+	margin: 0 10px 0 0;
+	padding: 0;
+	float: left;
 }
 
 ul.pegrow li.peg{
 	display: inline-block;
-	margin: 10px 5px;
+	margin: 0 10px;
 	width: 200px;
 	height: 200px;
+	border: 2px solid transparent;
 }
 
 ul.pegrow li.peg a {
@@ -28,19 +30,27 @@ ul.pegrow li.peg a {
 	height: 100%;
 }
 
-ul.pegrow li.button{
-	display: inline-block;
-	margin: 10px 5px;
+.row button.confirm{
+	display: block;
 	width: 100px;
+	margin: 0;
 	height: 100px;
 	background-color: #ccc;
+	visibility: visible;
+}
+
+.row button.confirm:disabled{
+	visibility: hidden;
 }
 
 ul.keyrow {
 	list-style: none;
 	text-align: center;
 	width: 100px;
-	display: inline-block;
+	float: left;
+	display: block;
+	margin: 0;
+	padding: 0;
 }
 
 ul.keyrow li.key{
@@ -49,6 +59,10 @@ ul.keyrow li.key{
 	width: 25px;
 	height: 25px;
 	background-color: #ccc;
+}
+
+#shield ul.keyrow {
+	display: none;
 }
 
 #shield{
@@ -72,4 +86,8 @@ ul.keyrow li.key{
 
 .cf:after {
     clear: both;
+}
+
+ul.pegrow li.peg.invalid{
+	border: 3px solid red;
 }

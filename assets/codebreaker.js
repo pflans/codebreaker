@@ -24,6 +24,8 @@
 			6: '#FF0000',
 		},
 
+		defaultColor: 0,
+
 		playableColors: function (){
 			var _ = this;
 			var playableColors = _.colors;
@@ -32,11 +34,12 @@
 		}
 	}
 
-
-	var gameRows = 2; // 1 indexed
+	var gameRows = 2; // Gameboard rows
+	gameRows++; // Add home row
 
 	var canvas; // Global element
 
+	CODEBREAKER.turnCounter = 0;
 	CODEBREAKER.pegs = {};
 
 	CODEBREAKER.addPeg = function(peg) {
@@ -48,17 +51,17 @@
 	    }
 	};
 
-	function Peg (color, pegrow, pos) {
+	function Peg (color, pegrow, pos, el) {
 
-		this.selectable = true;
 		this.color = color;
 		this.pegrow = pegrow;
 		this.pos = pos;
+		this.element = el;
 
 		this.setColor = function(color){
 			this.color = color;
 		};
-		setPegrow = function(row){
+		setPegRow = function(row){
 			this.pegrow = row;
 		};
 		setPos = function(pos){
@@ -67,81 +70,99 @@
 	};
 
 	CODEBREAKER.init = function (){
-		var _ = this;
 
 		if (CODEBREAKER.debugMode){
-			console.log('=== DEBUG TRUE ====')
+			console.log('==== DEBUG TRUE ======');
 		}
 
 		CODEBREAKER.setupBoard();
 		CODEBREAKER.eventListeners();
+		CODEBREAKER.gameTurn();
+	};
+
+	CODEBREAKER.gameTurn = function (){
+
+		var turn = CODEBREAKER.turnCounter;
+		var rows = $('#codebreaker').find(".row").get().reverse();
+		
+		CODEBREAKER.Utils.debugFunction('gameturn: '+ turn);
+
+		$(rows[turn]).find('.infocontainer button.confirm').prop('disabled',false);
+
+		// Remove all previous event listeners on pegs
+		$('.peg').unbind('click.CB.peg');
+
+		// Add event listeners to current playable pegs
+		$(CODEBREAKER.pegs[turn]).each(function(index, value){
+			$(CODEBREAKER.pegs[turn][index].element).on('click.CB.peg', function() {
+				CODEBREAKER.changeColor(CODEBREAKER.pegs[turn][index].element);
+			});
+		});
+
+
 	};
 
 
 	CODEBREAKER.setupBoard = function (){
-		var shield = $('#shield');
-		var shieldRow = $('#shield .row')
-		var board = $('#board');
-		var boardRow = $('#board .row');
+		var	shield = $('#shield'),
+			board = $('#board'),
+			keyRow = $('#board ul.keyrow'),
+			pegRow = $('#shield .row');
 
+		for (i = 0; i < gameRows; i++){ 
+			var newRow = pegRow.clone();
+			var targetContainer = (i === 0 ? shield : board);
 
-		// TODO: This sometimes outputs out of order of data-cbrow
-		for (i = 1; i < gameRows+1; i++){ // 1 indexed due to shield being row 0. Probably a bad idea?
-			var newRow = boardRow.clone();
-/*
-			newRow.children('ul.pegrow').data('cbrow', i); // might be unneed to add data to parent
-			
+			newRow.appendTo(targetContainer);
+
 			newRow.find('li.peg').each(function(index, value){
-				$(this).data('cbpos', index).data('cbrow', i);
+				var peg = new Peg(CODEBREAKER.pegColors.defaultColor, i, index, $(this));
+				CODEBREAKER.addPeg(peg);
 			});
-*/
-			board.append(newRow);
 
+			pegRow.remove();
+			keyRow.remove();
 		}
-
-		var newShield = shield.clone();
-
-		//newShield.children('ul.pegrow').data('cbrow', i); // might be unneed to add data to parent
-		
-		/*		
-		newShield.find('li.peg').each(function(index, value){
-			var peg = new Peg(1,0,index);
-			CODEBREAKER.addPeg(peg);
-			$(this).data('cbpos', peg.pos).data('cbrow', peg.pegrow);
-		});
-*/
-
-		shield.append(newShield);
-
-		shieldRow.remove();
-		boardRow.remove();
-		
-
-
 	};
 
 	CODEBREAKER.eventListeners = function (){
-		var counter = 1;
-		$('.peg').on('click', function() {
-			var _ = $(this);
-			var color;
-			var colors = CODEBREAKER.pegColors.playableColors();
+		;
+		$('.confirm').on('click', function() {
+			CODEBREAKER.confirmRow($(this));
+		});
+	};
 
-			if (!_.attr('data-cbcolor')){
+	CODEBREAKER.changeColor = function(peg){
+			var color,
+				colors = CODEBREAKER.pegColors.playableColors();
+
+			peg.removeClass('invalid');
+
+			if (!peg.attr('data-cbcolor')){
 				color = 1;
 			} else {
-				var prevColor = parseInt(_.attr('data-cbcolor'), 10);
-				if (prevColor == Object.keys(colors).length){
+				var prevColor = parseInt(peg.attr('data-cbcolor'), 10); // @todo: this is probably not the best way
+				if (prevColor === Object.keys(colors).length){
 					color = 1;
 				} else {
 					color = prevColor + 1;
 				}
 			}
-			_.attr('data-cbcolor', color);
-			_.css('background-color', colors[color]);
+			peg.attr('data-cbcolor', color).css('background-color', colors[color]);
+	};
 
+	CODEBREAKER.confirmRow = function(button){
+
+		var baddata = false, 
+			pegs = $(button).siblings('li.peg');
+		pegs.each(function(){
+			if (!$(this).attr('data-cbcolor')){
+				$(this).addClass('invalid');
+				baddata = true;
+			}
 		});
-
+		
+		return baddata ? false : true;;
 	};
 
 	/* 
@@ -160,14 +181,14 @@
 
 
 
-	CODEBREAKER.init();
+	
 
 
 	CODEBREAKER.Utils = {};
 
-	CODEBREAKER.Utils.debugFunction = function(_){
+	CODEBREAKER.Utils.debugFunction = function(x){
 		if (CODEBREAKER.debugMode) {
-			console.log('function: '+CODEBREAKER.Utils.debugFunction.caller.name);
+			console.log(x);
 		};
 	};
 
@@ -175,5 +196,5 @@
 		return pegColors[id];
 	};
 
-
+	CODEBREAKER.init();
 //});
