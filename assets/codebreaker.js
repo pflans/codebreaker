@@ -1,19 +1,29 @@
 //$(function(){
 	//'use strict';
+
 	var CODEBREAKER = {};
 
-	CODEBREAKER.debugMode = true; // Member CODEBREAKER
+	// ========
+	// Settings
+	// ========
 
-	// 0: Grey 
-	// 1: Blue
-	// 2: Green
-	// 3: Yellow
-	// 4: Neon Green
-	// 5: Purple
-	// 6: Red
-	var pegIds = [0,1,2,3,4,5,6]; 
+	CODEBREAKER.debugMode = true; 
+	CODEBREAKER.maxTurns = 6; 
 
+	// Scoring key peg colors 
+	CODEBREAKER.keyColors = {
+		hit: '#000000',
+		miss: '#ffffff'
+	}
+	// Game board peg colors
 	CODEBREAKER.pegColors = {
+		// 0: Grey 
+		// 1: Blue
+		// 2: Green
+		// 3: Yellow
+		// 4: Neon Green
+		// 5: Purple
+		// 6: Red
 		colors: {
 			0: '#808080',
 			1: '#0066FF',
@@ -27,32 +37,39 @@
 		defaultColor: 0,
 
 		playableColors: function (){
-			var _ = this;
-			var playableColors = _.colors;
+			var playableColors = this.colors;
 			delete playableColors[0];
 			return playableColors;
 		}
 	}
 
-	var gameRows = 2; // Gameboard rows
-	gameRows++; // Add home row
-
-	var canvas; // Global element
-
-	CODEBREAKER.turnCounter = 0;
+	// ========
+	// Initialize Variables 
+	// ========
+	
+	CODEBREAKER.turnCounter = -1;
 	CODEBREAKER.pegs = {};
+	CODEBREAKER.rowContainer = $('#shield .row').clone();
+	CODEBREAKER.gameOver = false;
 
-	CODEBREAKER.addPeg = function(peg) {
 
-		if (CODEBREAKER.pegs[peg.pegrow]) {
-	    	CODEBREAKER.pegs[peg.pegrow].push(peg);
-	    } else {
-	    	CODEBREAKER.pegs[peg.pegrow] = [peg];
-	    }
+	CODEBREAKER.init = function (){
+
+		if (CODEBREAKER.debugMode){
+			console.log('==== DEBUG TRUE ======');
+		}
+
+		CODEBREAKER.setupBoard();
+		CODEBREAKER.gameTurn();
 	};
 
-	function Peg (color, pegrow, pos, el) {
-
+	// ========
+	// Classes 
+	// ========
+	//
+	// Peg Class
+	//
+	var Peg = function (color, pegrow, pos, el) {
 		this.color = color;
 		this.pegrow = pegrow;
 		this.pos = pos;
@@ -69,132 +86,233 @@
 		};
 	};
 
-	CODEBREAKER.init = function (){
+	// ========
+	// Methods 
+	// ========
+	//
+	// Peg Methods
+	//
+	CODEBREAKER.addPeg = function(color, row, pos, el) {
+		var peg = new Peg(color, row, pos, el);
 
-		if (CODEBREAKER.debugMode){
-			console.log('==== DEBUG TRUE ======');
+		if (CODEBREAKER.pegs[peg.pegrow]) {
+	    	CODEBREAKER.pegs[peg.pegrow].push(peg);
+	    } else {
+	    	CODEBREAKER.pegs[peg.pegrow] = [peg];
+	    }
+	};
+
+	CODEBREAKER.changePegColor = function(peg){
+		var color,
+			colors = CODEBREAKER.pegColors.playableColors();
+
+		peg.element.removeClass('invalid');
+
+		if (peg.color === 0){
+			peg.color = 1;
+		} else {
+			if (peg.color === Object.keys(colors).length){
+				peg.color = 1;
+			} else {
+				peg.color = peg.color + 1;
+			}
 		}
 
-		CODEBREAKER.setupBoard();
-		CODEBREAKER.eventListeners();
-		CODEBREAKER.gameTurn();
+		CODEBREAKER.refreshRow();
+	};
+	//
+	// Row Methods
+	//
+	CODEBREAKER.newRow = function(rowNumber){
+		var	board = $('#board'),
+			pegRow = CODEBREAKER.rowContainer;
+
+		var newRow = pegRow.clone();
+	
+		newRow.find('li.peg').each(function(index, value){
+			CODEBREAKER.addPeg(CODEBREAKER.pegColors.defaultColor, rowNumber, index, $(this));
+		});
+
+		newRow.prependTo(board);
+	};
+
+	CODEBREAKER.refreshRow = function (){ 
+		for (x = 0; x < CODEBREAKER.pegs[CODEBREAKER.turnCounter].length; x++){
+			var peg = CODEBREAKER.pegs[CODEBREAKER.turnCounter][x];
+			$(peg.element).css('background-color', CODEBREAKER.getColorFromID(peg.color));
+		}
+	};
+
+	CODEBREAKER.confirmRow = function(pegs){
+		var colors = pegs.map(function(peg){
+			if (peg.color == 0){
+				$(peg.element).addClass('invalid');
+			}
+			return peg.color;
+		});
+		if (colors.indexOf(0) > -1){
+			return false;;
+		} else {
+			return true;;
+		}
+	};
+
+	CODEBREAKER.scoreRow = function() {
+		var homeRow = {},
+			turnRow = {},
+			HITkeys = 0,
+			MISSkeys = 0,
+			misses = [],
+			homeRow_obj = CODEBREAKER.pegs[0],
+			turnRow_obj = CODEBREAKER.pegs[Object.keys(CODEBREAKER.pegs).length - 1];
+
+		for (var index in homeRow_obj){
+			if (homeRow_obj.hasOwnProperty(index)) {
+		    	homeRow[homeRow_obj[index].pos] = homeRow_obj[index].color;
+			}
+		}
+		for (var index in turnRow_obj){
+			if (turnRow_obj.hasOwnProperty(index)) {
+		    	turnRow[turnRow_obj[index].pos] = turnRow_obj[index].color;
+			}
+		}
+
+		for (i = 0; i < Object.keys(turnRow).length; i++){
+			if (turnRow[i] === homeRow[i]){
+				HITkeys++;
+				turnRow[i] = undefined;
+				homeRow[i] = undefined;
+			} else {
+
+				misses.push(turnRow[i]);
+			}
+		}
+
+		var homeRowArray = $.map(homeRow, function(value, index) {
+			return [value];
+		});
+
+		for (number in misses) {
+			var numIndex = homeRowArray.indexOf(misses[number]);
+			if (numIndex > -1){
+				homeRowArray.splice(numIndex, 1);
+				MISSkeys++;
+			}
+		}
+
+		return {
+		    misses: MISSkeys,
+		    hits: HITkeys
+		}; 
+	};
+	//
+	// Key Methods
+	//
+	CODEBREAKER.updateGameKey = function(row, rowScore){
+		var misses = rowScore.misses,
+			hits = rowScore.hits;
+
+		$(row).find('.keyrow').children('li.key').each(function (index, value){
+				if (hits > 0){
+					$(this).css('background-color', CODEBREAKER.keyColors.hit);
+					hits--;
+				} else if (misses > 0){
+					$(this).css('background-color', CODEBREAKER.keyColors.miss);
+					misses--;
+				}
+		});
+	};
+
+	// ========
+	// Game Logic 
+	// ========
+
+	CODEBREAKER.setupBoard = function (){
+
+		$('#shield').find('li.peg').each(function(index, value){
+				CODEBREAKER.addPeg(CODEBREAKER.pegColors.defaultColor, 0, index, $(this));
+		});
+
+		CODEBREAKER.newRow(1); // Starting first board row
 	};
 
 	CODEBREAKER.gameTurn = function (){
+		if (!CODEBREAKER.gameOver){
+			CODEBREAKER.turnCounter++;
 
-		var turn = CODEBREAKER.turnCounter;
-		var rows = $('#codebreaker').find(".row").get().reverse();
+			var turn = CODEBREAKER.turnCounter,
+				rows = $('#codebreaker').find(".row").get().reverse(),
+				currentRow = $(rows[turn]),
+				currentPegs = CODEBREAKER.pegs[turn];
+
+			CODEBREAKER.debugFunction('gameturn: '+ turn);
 		
-		CODEBREAKER.Utils.debugFunction('gameturn: '+ turn);
+			// Remove all previous event listeners on pegs
+			$('.peg').unbind('click.CB.peg');
+			$('button.confirm').unbind('click.CB.confirm');
 
-		$(rows[turn]).find('.infocontainer button.confirm').prop('disabled',false);
-
-		// Remove all previous event listeners on pegs
-		$('.peg').unbind('click.CB.peg');
-
-		// Add event listeners to current playable pegs
-		$(CODEBREAKER.pegs[turn]).each(function(index, value){
-			$(CODEBREAKER.pegs[turn][index].element).on('click.CB.peg', function() {
-				CODEBREAKER.changeColor(CODEBREAKER.pegs[turn][index].element);
-			});
-		});
-
-
-	};
-
-
-	CODEBREAKER.setupBoard = function (){
-		var	shield = $('#shield'),
-			board = $('#board'),
-			keyRow = $('#board ul.keyrow'),
-			pegRow = $('#shield .row');
-
-		for (i = 0; i < gameRows; i++){ 
-			var newRow = pegRow.clone();
-			var targetContainer = (i === 0 ? shield : board);
-
-			newRow.appendTo(targetContainer);
-
-			newRow.find('li.peg').each(function(index, value){
-				var peg = new Peg(CODEBREAKER.pegColors.defaultColor, i, index, $(this));
-				CODEBREAKER.addPeg(peg);
+			// Add event listeners to current playable pegs
+			$(currentPegs).each(function(index, value){
+				currentPegs[index].element.on('click.CB.peg', function() {
+					CODEBREAKER.changePegColor(currentPegs[index]);
+				});
 			});
 
-			pegRow.remove();
-			keyRow.remove();
+			// Disable other buttons
+			$('button.confirm').prop('disabled', true);
+			// Enable confirm button
+			currentRow.find('.infocontainer button.confirm').prop('disabled',false);
+
+			// Add event listerner to confirm button
+			currentRow.find('button.confirm').on('click.CB.confirm', function() {
+				if (CODEBREAKER.confirmRow(currentPegs)){
+					// if turn one, start game
+					if (turn === 0){
+						CODEBREAKER.gameTurn();
+					} else {
+						CODEBREAKER.updateGameKey(currentRow, CODEBREAKER.scoreRow());
+						if (CODEBREAKER.scoreRow().hits === Object.keys(currentPegs).length){
+							CODEBREAKER.GameOver(true);
+						} else {
+							if (CODEBREAKER.turnCounter === CODEBREAKER.maxTurns){
+								CODEBREAKER.GameOver(false);
+							} else {
+								CODEBREAKER.newRow(turn+1);
+								CODEBREAKER.gameTurn();
+							}
+						}
+					}
+					
+				}
+			});
 		}
 	};
 
-	CODEBREAKER.eventListeners = function (){
-		;
-		$('.confirm').on('click', function() {
-			CODEBREAKER.confirmRow($(this));
-		});
-	};
-
-	CODEBREAKER.changeColor = function(peg){
-			var color,
-				colors = CODEBREAKER.pegColors.playableColors();
-
-			peg.removeClass('invalid');
-
-			if (!peg.attr('data-cbcolor')){
-				color = 1;
-			} else {
-				var prevColor = parseInt(peg.attr('data-cbcolor'), 10); // @todo: this is probably not the best way
-				if (prevColor === Object.keys(colors).length){
-					color = 1;
-				} else {
-					color = prevColor + 1;
-				}
+	CODEBREAKER.GameOver = function(victoryBool) {
+		if (!CODEBREAKER.gameOver){
+			CODEBREAKER.gameOver = true;
+			if (victoryBool) {
+				alert('You Win!');
+			}else{
+				alert('You lose! Good day Sir!');
 			}
-			peg.attr('data-cbcolor', color).css('background-color', colors[color]);
+		}
 	};
 
-	CODEBREAKER.confirmRow = function(button){
+	// ========
+	// Utilities 
+	// ========
 
-		var baddata = false, 
-			pegs = $(button).siblings('li.peg');
-		pegs.each(function(){
-			if (!$(this).attr('data-cbcolor')){
-				$(this).addClass('invalid');
-				baddata = true;
-			}
-		});
-		
-		return baddata ? false : true;;
+	CODEBREAKER.getColorFromID = function(id){
+		return CODEBREAKER.pegColors.colors[id];
 	};
 
-	/* 
-		
-		1. check if unlocked (unpicked);
-		2. if unlocked: click for color change
-		3. confirm button in bottom to end picking
-	
-
-	*/
-
-	CODEBREAKER.refreshBoard = function (){
-
-
-	};
-
-
-
-	
-
-
-	CODEBREAKER.Utils = {};
-
-	CODEBREAKER.Utils.debugFunction = function(x){
+	CODEBREAKER.debugFunction = function(x){
 		if (CODEBREAKER.debugMode) {
-			console.log(x);
+			console.log('DEBUG:: '+x);
 		};
 	};
-
-	CODEBREAKER.Utils.getColorFromID = function(id){
-		return pegColors[id];
-	};
-
+		
 	CODEBREAKER.init();
+
 //});
