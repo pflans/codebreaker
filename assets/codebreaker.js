@@ -1,5 +1,5 @@
 //$(function(){
-	//'use strict';
+//	'use strict';
 
 	var CODEBREAKER = {};
 
@@ -78,10 +78,10 @@
 		this.setColor = function(color){
 			this.color = color;
 		};
-		setPegRow = function(row){
+		this.setPegRow = function(row){
 			this.pegrow = row;
 		};
-		setPos = function(pos){
+		this.setPos = function(pos){
 			this.pos = pos;
 		};
 	};
@@ -137,7 +137,7 @@
 	};
 
 	CODEBREAKER.refreshRow = function (){ 
-		for (x = 0; x < CODEBREAKER.pegs[CODEBREAKER.turnCounter].length; x++){
+		for (var x = 0; x < CODEBREAKER.pegs[CODEBREAKER.turnCounter].length; x++){
 			var peg = CODEBREAKER.pegs[CODEBREAKER.turnCounter][x];
 			$(peg.element).css('background-color', CODEBREAKER.getColorFromID(peg.color));
 		}
@@ -177,7 +177,7 @@
 			}
 		}
 
-		for (i = 0; i < Object.keys(turnRow).length; i++){
+		for (var i = 0; i < Object.keys(turnRow).length; i++){
 			if (turnRow[i] === homeRow[i]){
 				HITkeys++;
 				turnRow[i] = undefined;
@@ -192,7 +192,7 @@
 			return [value];
 		});
 
-		for (number in misses) {
+		for (var number in misses) {
 			var numIndex = homeRowArray.indexOf(misses[number]);
 			if (numIndex > -1){
 				homeRowArray.splice(numIndex, 1);
@@ -228,12 +228,9 @@
 	// ========
 
 	CODEBREAKER.setupBoard = function (){
-
 		$('#shield').find('li.peg').each(function(index, value){
 				CODEBREAKER.addPeg(CODEBREAKER.pegColors.defaultColor, 0, index, $(this));
 		});
-
-		CODEBREAKER.newRow(1); // Starting first board row
 	};
 
 	CODEBREAKER.gameTurn = function (){
@@ -268,6 +265,7 @@
 				if (CODEBREAKER.confirmRow(currentPegs)){
 					// if turn one, start game
 					if (turn === 0){
+						CODEBREAKER.newRow(1); // Starting first board row
 						CODEBREAKER.gameTurn();
 					} else {
 						CODEBREAKER.updateGameKey(currentRow, CODEBREAKER.scoreRow());
