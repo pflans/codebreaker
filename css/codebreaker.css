@@ -1,0 +1,121 @@
+
+#board, #shield {
+	margin: 0 auto;
+}
+
+.row {
+	padding: 10px;
+	margin: 30px;
+}
+
+ul.pegrow{
+	list-style: none;
+	display: inline-block;
+	margin: 0 10px 0 0;
+	padding: 0;
+	float: left;
+}
+
+ul.pegrow li.peg{
+	display: inline-block;
+	margin: 0 10px;
+	width: 200px;
+	height: 200px;
+	border: 2px solid transparent;
+}
+
+ul.pegrow li.peg a {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.row button.confirm{
+	 -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    outline: none;
+	display: block;
+	width: 100px;
+	margin: 0;
+	height: 100px;
+	background-color: transparent;
+	border: none;
+	visibility: visible;
+	position: relative;
+}
+
+.row button.confirm:disabled{
+	visibility: hidden;
+}
+
+.row button.confirm i{
+	font-size: 9em;
+	position: absolute;
+	top: 0;
+	left: 5px;
+	z-index: 2;
+}
+
+.row button.confirm i.shadow{
+	font-size: 10em;
+	position: absolute;
+	top: -6px;
+	left: 1px;
+	z-index: 1;
+
+}
+
+ul.keyrow {
+	list-style: none;
+	text-align: center;
+	width: 100px;
+	float: left;
+	display: block;
+	margin: 0;
+	padding: 0;
+	background-color: #ccc;
+}
+
+ul.keyrow li.key{
+	display: inline-block;
+	margin: 10px;
+	width: 23px;
+	height: 25px;
+	border: 2px solid #000;
+	background-color: #ccc;
+}
+
+#shield ul.keyrow {
+	display: none;
+}
+
+#shield{
+	background-color: #525252;
+}
+
+/* Colors */
+
+.peg.color0, .peg {
+	background-color: #808080;
+}
+
+
+/* Utility */
+
+.cf:before,
+.cf:after {
+    content: " "; 
+    display: table; 
+}
+
+.cf:after {
+    clear: both;
+}
+
+ul.pegrow li.peg.invalid{
+	border: 3px solid red;
+}
